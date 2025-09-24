@@ -1,0 +1,122 @@
+openapi: 3.0.0
+info:
+  title: TCP Monitor API
+  description: API for monitoring TCP connections statistics
+  version: 1.0.0
+  contact:
+    name: AINexusHub Team
+    email: support@ainexushub.cn
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://api.ainexushub.cn
+    description: Production server
+
+tags:
+  - name: connections
+    description: TCP connections management and statistics
+
+paths:
+  /api/connections/stats:
+    get:
+      tags:
+        - connections
+      summary: Get TCP connection statistics
+      description: Retrieve statistics of TCP connections within a specified time range
+      operationId: getConnectionStats
+      parameters:
+        - name: startTime
+          in: query
+          description: 'Start time for filtering connections (format: yyyy-MM-dd HH:mm:ss)'
+          required: false
+          schema:
+            type: string
+          example: "2024-01-01 00:00:00"
+        - name: endTime
+          in: query
+          description: 'End time for filtering connections (format: yyyy-MM-dd HH:mm:ss)'
+          required: false
+          schema:
+            type: string
+          example: "2024-01-01 23:59:59"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConnectionStatsDTO'
+              example:
+                - localEndpoint: "192.168.1.100:8080"
+                  duration: 3600
+                - localEndpoint: "10.0.0.1:443"
+                  duration: 7200
+        '400':
+          description: Invalid time format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ConnectionStatsDTO:
+      type: object
+      description: TCP connection statistics data transfer object
+      properties:
+        localEndpoint:
+          type: string
+          description: Local endpoint (IP:Port format)
+          example: "192.168.1.100:8080"
+        duration:
+          type: integer
+          format: int64
+          description: Connection duration in seconds
+          example: 3600
+      required:
+        - localEndpoint
+        - duration
+
+    ErrorResponse:
+      type: object
+      description: Standard error response
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the error occurred
+          example: "2024-01-01T12:00:00Z"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 500
+        error:
+          type: string
+          description: Error type
+          example: "Internal Server Error"
+        message:
+          type: string
+          description: Error message
+          example: "An unexpected error occurred"
+        path:
+          type: string
+          description: Request path
+          example: "/api/connections/stats"
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
